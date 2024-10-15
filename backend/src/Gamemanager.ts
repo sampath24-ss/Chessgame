@@ -1,5 +1,5 @@
 import { WebSocket, WebSocketServer } from "ws";
-import { INIT_GAME } from "./messages";
+import { INIT_GAME, MOVE } from "./messages";
 import { Game } from "./Game";
 
 
@@ -25,15 +25,24 @@ export class GameManager{
     }
 
     private addHandler(socket: WebSocket){
+        console.log('I am there');
         socket.on('message', (data) => {
             const message = JSON.parse(data.toString());
-            if(message === INIT_GAME){
+            if(message.type === INIT_GAME){
                 if(this.pendingUser){
                     const game = new Game(this.pendingUser,socket);
+                    console.log('I am there 2');
                     this.games.push(game);
                     this.pendingUser = null;
+                    console.log('I am there 3');
                 }else{
                     this.pendingUser = socket;
+                }
+            }
+            if(message.type === MOVE){
+                const game = this.games.find(game => game.player1 === socket || game.player2 === socket);
+                if(game){
+                    game.makeMove(socket,message.move)
                 }
             }
         })
